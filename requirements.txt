@@ -1,0 +1,13 @@
+# Pinned to these exact versions on purpose: newer langchain 1.x
+# renamed/removed several APIs used in this project (create_sql_query_chain,
+# create_tool_calling_agent, AgentExecutor, StructuredTool location).
+# These versions match the class note pattern and are confirmed working.
+langchain==0.3.27
+langchain-openai==0.3.28
+langchain-community==0.3.27
+langchain-core==0.3.72
+python-dotenv
+pandas
+SQLAlchemy
+pydantic
+tavily-python
