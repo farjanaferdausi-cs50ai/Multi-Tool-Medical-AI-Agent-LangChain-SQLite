@@ -9,7 +9,9 @@ Run:
     python main.py
 """
 
-from src.agent import build_agent_executor
+import traceback
+
+from src.agent import TOOLS, build_agent_executor
 
 
 def main():
@@ -19,8 +21,9 @@ def main():
     print(" or ask general medical questions (definitions, symptoms, cures).")
     print(" Type 'exit' or 'quit' to stop.")
     print("=" * 60)
+    print(" Tools loaded:", ", ".join(t.name for t in TOOLS))
 
-    executor = build_agent_executor()
+    agent = build_agent_executor()
 
     while True:
         question = input("\nYou: ").strip()
@@ -31,10 +34,19 @@ def main():
             continue
 
         try:
-            response = executor.invoke({"input": question})
-            print(f"\nAgent: {response['output']}")
-        except Exception as exc:  # resilience: never crash the chat loop
-            print(f"\n[Error] Something went wrong while answering: {exc}")
+            result = agent.invoke({"messages": [{"role": "user", "content": question}]})
+            content = result["messages"][-1].content
+            if isinstance(content, list):
+                text = "".join(
+                    block.get("text", "") for block in content
+                    if isinstance(block, dict) and block.get("type") == "text"
+                )
+            else:
+                text = content
+            print(f"\nAgent: {text}")
+        except Exception:
+            print("\n[Error] Something went wrong while answering. Full details below:")
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

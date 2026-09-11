@@ -1,11 +1,15 @@
-# Pinned to these exact versions on purpose: newer langchain 1.x
-# renamed/removed several APIs used in this project (create_sql_query_chain,
-# create_tool_calling_agent, AgentExecutor, StructuredTool location).
-# These versions match the class note pattern and are confirmed working.
-langchain==0.3.27
-langchain-openai==0.3.28
-langchain-community==0.3.27
-langchain-core==0.3.72
+# I upgraded to the modern LangChain 1.x stack + create_agent (built on
+# LangGraph) specifically because Gemini's newer "thinking" models (3.x)
+# require a "thought_signature" to be echoed back on every tool call.
+# The old AgentExecutor architecture (LangChain 0.3.x) dropped this
+# signature when rebuilding its scratchpad, causing a 400 error from
+# the Gemini API. create_agent keeps the original message objects
+# intact across turns, so the signature survives correctly.
+langchain
+langchain-openai
+langchain-community
+langchain-core
+langchain-google-genai==4.4.0
 python-dotenv
 pandas
 SQLAlchemy

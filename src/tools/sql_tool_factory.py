@@ -9,30 +9,44 @@ own database path, table name, tool name, and description.
 How each tool answers a question (matches the assignment requirement:
 "Execute user questions via SQL, return the result in natural
 language"):
-    1. The natural-language question comes in (e.g. "what is the
-       average age of patients with heart disease?").
-    2. LangChain's `create_sql_query_chain` turns it into a real SQL
-       query using the LLM + the database schema.
+    1. The natural-language question comes in.
+    2. I ask the LLM to write a SQLite SELECT query for it, given the
+       table schema (I write this prompt myself instead of relying on
+       LangChain's old `create_sql_query_chain` helper, which was
+       removed in LangChain 1.x).
     3. I execute that SQL query against the SQLite database (READ-ONLY
-       connection — I never allow INSERT/UPDATE/DELETE).
+       — I never allow INSERT/UPDATE/DELETE/DROP/ALTER).
     4. I feed the question + SQL query + SQL result back into the LLM
        so it replies in plain natural language instead of a raw table.
 """
 
 from pathlib import Path
 
-from langchain.chains import create_sql_query_chain
 from langchain_community.tools import QuerySQLDatabaseTool
 from langchain_community.utilities import SQLDatabase
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain.tools import StructuredTool
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from src.config import get_llm
 
-ANSWER_PROMPT = PromptTemplate.from_template(
+SQL_GENERATION_PROMPT = ChatPromptTemplate.from_template(
+    """You are a SQLite expert. Given an input question and a table \
+schema, write a syntactically correct, READ-ONLY SQLite SELECT query \
+that answers the question.
+
+Table schema:
+{table_info}
+
+Question: {question}
+
+Return ONLY the raw SQL query. No explanation, no markdown formatting, \
+no code fences, no trailing semicolon commentary.
+SQL Query:"""
+)
+
+ANSWER_PROMPT = ChatPromptTemplate.from_template(
     """Given the following user question, the corresponding SQL query, \
 and the SQL result, answer the user's question in clear, natural \
 language. Do not mention that you ran a SQL query.
@@ -40,7 +54,7 @@ language. Do not mention that you ran a SQL query.
 Question: {question}
 SQL Query: {query}
 SQL Result: {result}
-Answer: """
+Answer:"""
 )
 
 
@@ -48,10 +62,17 @@ class DBToolInput(BaseModel):
     question: str = Field(description="A natural language question about the dataset's statistics or records.")
 
 
-def _forbid_write_queries(sql: str) -> str:
-    """A simple safety guard so the LLM can never generate a write query."""
+def _clean_sql(raw: str) -> str:
+    """Strips markdown fences (if any) and blocks write operations."""
+    sql = raw.strip()
+    if sql.startswith("```"):
+        sql = sql.strip("`")
+        if sql.lower().startswith("sql"):
+            sql = sql[3:]
+        sql = sql.strip()
+
     forbidden = ("insert", "update", "delete", "drop", "alter", "create")
-    if sql.strip().lower().startswith(forbidden):
+    if sql.lower().startswith(forbidden):
         raise ValueError("Write operations are not permitted on this read-only tool.")
     return sql
 
@@ -67,21 +88,18 @@ def make_db_tool(db_path: Path, table_name: str, tool_name: str, description: st
         description: tells the routing agent WHEN to pick this tool
     """
     db = SQLDatabase.from_uri(f"sqlite:///{db_path}", include_tables=[table_name])
-    llm = get_llm()
-
-    write_query = create_sql_query_chain(llm, db)
     execute_query = QuerySQLDatabaseTool(db=db)
-
-    chain = (
-        RunnablePassthrough.assign(query=write_query | _forbid_write_queries)
-        .assign(result=lambda x: execute_query.invoke(x["query"]))
-        | ANSWER_PROMPT
-        | llm
-        | StrOutputParser()
-    )
+    table_info = db.get_table_info()
 
     def _run(question: str) -> str:
-        return chain.invoke({"question": question})
+        llm = get_llm()
+        sql_chain = SQL_GENERATION_PROMPT | llm | StrOutputParser()
+        raw_sql = sql_chain.invoke({"question": question, "table_info": table_info})
+        sql = _clean_sql(raw_sql)
+        result = execute_query.invoke(sql)
+
+        answer_chain = ANSWER_PROMPT | llm | StrOutputParser()
+        return answer_chain.invoke({"question": question, "query": sql, "result": result})
 
     return StructuredTool.from_function(
         func=_run,

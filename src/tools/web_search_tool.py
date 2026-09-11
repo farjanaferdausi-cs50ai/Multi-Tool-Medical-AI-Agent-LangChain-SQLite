@@ -12,7 +12,7 @@ here — those belong to the three DB tools instead.
 """
 
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain.tools import StructuredTool
+from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from src.config import TAVILY_API_KEY
