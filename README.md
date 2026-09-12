@@ -98,7 +98,7 @@ medical-multi-tool-agent/
 
 | Dataset | SQLite DB | Table | Key Columns | Rows |
 |---|---|---|---|---|
-| ❤️ Heart Disease | `heart_disease.db` | `heart_disease_records` | age, sex, cp, trestbps, chol, thalach, target ... | 303 |
+| 🫀  Heart Disease | `heart_disease.db` | `heart_disease_records` | age, sex, cp, trestbps, chol, thalach, target ... | 303 |
 | 🧬 Cancer (cell measurements) | `cancer.db` | `cancer_records` | clump_thickness, uniformity_of_cell_size, bare_nuclei, mitosis ... | 101 |
 | 🩸 Diabetes (Pima Indians) | `diabetes.db` | `diabetes_records` | Pregnancies, Glucose, BMI, Age, Outcome ... | 768 |
 
@@ -120,7 +120,7 @@ source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure API keys
+### 🔑 2. Configure API keys
 
 ```bash
 cp .env.example .env
@@ -138,7 +138,7 @@ Edit `.env` and fill in **one** LLM option:
 Also fill in:
 - `TAVILY_API_KEY` (free tier at [tavily.com](https://tavily.com)) — required for `MedicalWebSearchTool`
 
-### 3. Build the SQLite databases
+### 📈 3. Build the SQLite databases
 
 ```bash
 python src/prepare_db.py
@@ -186,10 +186,14 @@ python main.py
 | **SQLite** | Lightweight structured storage for all three datasets |
 | **Tavily Search API** | General medical knowledge retrieval |
 
-## 👩‍💻 Author
+## 🖊️ Author
 
-Built by **Farjana Ferdausi** as part of the Ostad AI/ML Engineering &
-Data Science program (Module 23).
+**Farjana Ferdausi**
+
+AI/ML Engineering & Data Science, Fellow — Google Cloud Gen AI Academy APAC Edition (Cohort 3) | Agentic AI · RAG · Gemini · ADK · BigQuery MCP · Cloud Run | Former HR Professional (14+ years) at Radisson Blu Dhaka Water Garden, Bangladesh
+
+Built for as part of the AI/ML Engineering program | Batch : 6 |
+Module : 23 | Ostad | Bangladesh |
 
 [GitHub](https://github.com/farjanaferdausi-cs50ai) · [LinkedIn](https://linkedin.com/in/farjana-ferdausi/) · [Medium](https://medium.com/@farjana.rafi1983)
 
