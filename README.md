@@ -34,8 +34,8 @@ running on Google Gemini.
 
 ## 🔎 Overview
 
-I built this project as my **Module 23 assignment** (Ostad AI/ML Engineering
-& Data Science Program). It demonstrates how a single AI agent can
+I built this project as my **Module 23 assignment** (AI/ML Engineering
+Program, Batch:6 , Ostad). It demonstrates how a single AI agent can
 intelligently decide, per question, whether to:
 
 1. 📊 Query a structured SQL database and answer with real statistics, or
