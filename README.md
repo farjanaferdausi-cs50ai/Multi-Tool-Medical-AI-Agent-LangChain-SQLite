@@ -16,6 +16,8 @@ medical knowledge questions (definitions, symptoms, cures) to a live web
 search tool. Built with LangChain's modern `create_agent` (LangGraph-based)
 running on Google Gemini.
 
+Google Colab Link : https://colab.research.google.com/drive/1qLPVVlZ8vjSmk1OiUY-m5Dxus_-mKVQo?usp=sharing
+
 ---
 
 ## 📑 Table of Contents
